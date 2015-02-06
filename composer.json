@@ -1,0 +1,25 @@
+{
+	"name" : "framework-interop/module-autoinstaller",
+	"description" : "This package contains a module detector and aggregator for framework agnostic modules (from framework-interop project).",
+	"type" : "composer-plugin",
+	"license" : "MIT",
+	"homepage" : "http://mouf-php.com",
+	"keywords" : [
+		"ContainerInterop",
+		"DI",
+		"installer"
+	],
+	"require" : {
+		"php" : ">=5.4",
+		"framework-interop/module-interface" : "~1.0",
+		"composer-plugin-api" : "1.0.0"
+	},
+	"autoload" : {
+		"psr-4" : {
+			"Interop\\Framework\\ModuleInstaller\\" : "src"
+		}
+	},
+	"extra" : {
+		"class" : "Interop\\Framework\\ModuleInstaller\\ModuleInstallerPlugin"
+	}
+}
