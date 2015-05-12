@@ -57,8 +57,8 @@ class ModuleInstallerPlugin implements PluginInterface, EventSubscriberInterface
                 // Allowed values for module-factory can be one of:
                 // String: the code of the factory
                 // Array of strings: an array of factory code
-                // Factory descriptor: like { "name"=>"", "description"=>"toto", "factory"=>"code" }
-                // Array of factory descriptor: like [{ "name"=>"", "description"=>"toto", "factory"=>"code" }]
+                // Factory descriptor: like { "name"=>"", "description"=>"toto", "module"=>"code" }
+                // Array of factory descriptor: like [{ "name"=>"", "description"=>"toto", "module"=>"code", "priority"=>100 }]
                 if (!is_array($factories) || self::isAssoc($factories)) {
                     $factories = array($factories);
                 }
@@ -77,7 +77,8 @@ class ModuleInstallerPlugin implements PluginInterface, EventSubscriberInterface
                         $factory = [
                             "name" => $packageName.'_'.$key,
                             "description" => $moduleName,
-                            "factory" => $factory,
+                            "module" => $factory,
+                            "priority" => 0,
                         ];
                         $factories[$key] = $factory;
                     }
@@ -86,12 +87,22 @@ class ModuleInstallerPlugin implements PluginInterface, EventSubscriberInterface
             }
         }
 
+        usort($factoryList, function($module1, $module2) {
+            $priority1 = isset($module1['priority'])?$module1['priority']:0;
+            $priority2 = isset($module2['priority'])?$module2['priority']:0;
+            return $priority1-$priority2;
+        });
+
         // Now, we should merge this with the existing modules.php if it exists.
-        if (file_exists("modules.php")) {
-            $existingFactoryList = require 'modules.php';
-        } else {
-            $existingFactoryList = [];
-        }
+        // FIXME: this is actually not possible! What if the classes are in error, or have been uninstalled...
+        // We need to start from scratch each time!
+        //if (file_exists("modules.php")) {
+            // FIXME: autoload problems here!
+            // Maybe we should simply have a list of modules that is overwritten!
+        //    $existingFactoryList = require 'modules.php';
+        //} else {
+            //$existingFactoryList = [];
+        //}
 
         if ($factoryList) {
             // TODO: security checks
@@ -99,7 +110,7 @@ class ModuleInstallerPlugin implements PluginInterface, EventSubscriberInterface
             fwrite($fp, "<?php\nreturn [\n");
             foreach ($factoryList as $factory) {
                 // Let's see if the factory exists in the existing list:
-                foreach ($existingFactoryList as $item) {
+                /*foreach ($existingFactoryList as $item) {
                     if ($factory['name'] == $item['name']) {
                         $factory = array_merge($item, $factory);
                         break;
@@ -107,11 +118,11 @@ class ModuleInstallerPlugin implements PluginInterface, EventSubscriberInterface
                 }
                 if (!isset($factory['enable'])) {
                     $factory['enable'] = true;
-                }
+                }*/
 
                 fwrite($fp, "    [\n");
                 foreach ($factory as $key => $value) {
-                    if ($key == 'factory') {
+                    if ($key == 'module') {
                         fwrite($fp, "        '$key' => ".$value.",\n");
                     } else {
                         fwrite($fp, "        '$key' => ".var_export($value, true).",\n");
@@ -175,8 +186,6 @@ class ModuleInstallerPlugin implements PluginInterface, EventSubscriberInterface
             $package['is-root'] = true;
             $packages[] = $package;
         }
-
-        $packages = PackagesOrderer::reorderPackages($packages);
 
         return $packages;
     }

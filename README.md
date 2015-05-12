@@ -33,32 +33,18 @@ The Module-Autoinstaller will scan all packages *composer.json* files and will l
 {
 	"extra": {
 		"framework-interop": {
-			"module-factory": "My\\ModuleFactory::getModule"
+			"module-factory": "new My\\Module()"
 		}
 	}
 }
 ```
 
-This section actually declares a module factory that can be bundled in the package.
+This section actually declares an instance of a *framework-interop* module.
 
-The "module-factory" parameter must point to a function or a static method that returns the module.
+The "module-factory" parameter must be a valid PHP statement that returns an instance of an object implementing 
+the `ModuleInterface`.
 
-Here is a sample implementation:
-
-```php
-class ModuleFactory {
-	/**
-	 * This method is returning a configured module
-	 *
-	 * @return ModuleInterface
-	 */
-	public static function getModule() {
-		return new MyModule();
-	}
-}
-```
-
-Note: your package does not have to require the `mouf/module-autoinstaller` package. This is sweet because if
+Note: your package does not have to require the `framework-interop/module-autoinstaller` package. This is sweet because if
 other module detectors follow the same convention (referencing factory code in `composer.json` extra section),
 there can easily be many different implementations.
 
@@ -76,13 +62,11 @@ return [
     [
         'name' => '__root___0',
         'description' => 'Module number 0 for package __root__',
-        'factory' => My\ModuleFactory::getModule,
-        'enable' => true
+        'module' => new My\\Module(),
+        'priority' => 0
     ],
 ];
 ```
-
-Please note that the developer can enable or disable modules manually, using the 'enable' attribute.
 
 From there it is up to the application developer to use that file.
 
@@ -105,7 +89,7 @@ $app = new Application(
 
 Allowed syntax
 --------------
-Those syntaxes are all valid to declare module factories in **composer.json**:
+Those syntax are all valid to declare module factories in **composer.json**:
 
 Simply declaring a module-factory **via callback**:
 
@@ -113,7 +97,7 @@ Simply declaring a module-factory **via callback**:
 {
 	"extra": {
 		"framework-interop": {
-			"module-factory": "My\\ModuleFactory::getModule"
+			"module-factory": "new My\\Module()"
 		}
 	}
 }
@@ -126,9 +110,9 @@ Declaring an **array of module-factories via callback**:
 	"extra": {
 		"framework-interop": {
 			"module-factory": [
-				"My\\ModuleFactory1::getModule",
-				"My\\ModuleFactory2::getModule",
-				"My\\ModuleFactory3::getModule"
+				"new My\\Module()",
+				"new My\\Module2()",
+				"new My\\Module3()"
 			]
 		}
 	}
@@ -144,14 +128,15 @@ Declaring a module-factory **descriptor** (it contains additional data about the
 			"module-factory": {
 				"name": "a unique name for the factory",
 				"description": "a description of what the factory does",
-				"factory": "My\\ModuleFactory::getModule"
+				"module": "new My\\Module()",
+				"priority": 0
 			}
 		}
 	}
 }
 ```
 
-Note: all parameters of a descriptor are optional, except for the "factory" part.
+Note: all parameters of a descriptor are optional, except for the "module" part.
 
 Declaring an **array of module-factory descriptors**:
 
@@ -163,12 +148,14 @@ Declaring an **array of module-factory descriptors**:
 			[{
 				"name": "a unique name for the factory",
 				"description": "a description of what the factory does",
-				"factory": "My\\ModuleFactory::getModule"
+				"module": "new My\\Module1()",
+                "priority": 0
 			},
 			{
 				"name": "a unique name for another factory",
 				"description": "a description of what the factory does",
-				"factory": "My\\ModuleFactory2::getModule"
+				"module": "new My\\Module2()",
+                "priority": 1
 			}]
 		}
 	}
