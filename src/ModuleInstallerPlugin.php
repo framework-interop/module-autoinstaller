@@ -156,7 +156,7 @@ class ModuleInstallerPlugin implements PluginInterface, EventSubscriberInterface
         // Get the available packages.
         $allPackages = array();
         $locker = $composer->getLocker();
-        if (isset($locker)) {
+        if ($locker && $locker->isLocked()) {
             $lockData = $locker->getLockData();
             $allPackages = isset($lockData['packages']) ? $lockData['packages'] : array();
 
